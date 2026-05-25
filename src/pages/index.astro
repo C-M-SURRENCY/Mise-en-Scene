@@ -16,14 +16,56 @@ const archivalCatalog = sortedPosts;
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Mise-en-Scène | Film Journal</title>
+	
+	<script type="application/ld+json" define:vars={{ 
+		title: leadFeature?.frontmatter?.title || "Mise-en-Scène", 
+		director: leadFeature?.frontmatter?.director || "Cinema",
+		year: leadFeature?.frontmatter?.year || "2026",
+		rating: leadFeature?.frontmatter?.rating || "4.0"
+	}}>
+	{
+	  "@context": "https://schema.org/",
+	  "@type": "Review",
+	  "itemReviewed": {
+	    "@type": "Movie",
+	    "name": title,
+	    "director": {
+	      "@type": "Person",
+	      "name": director
+	    },
+	    "dateCreated": year
+	  },
+	  "reviewRating": {
+	    "@type": "Rating",
+	    "ratingValue": rating,
+	    "bestRating": "4.0",
+	    "worstRating": "0.0"
+	  },
+	  "author": {
+	    "@type": "Person",
+	    "name": "Cayden Mcguire Surrency"
+	  },
+	  "publisher": {
+	    "@type": "Organization",
+	    "name": "Mise-en-Scène",
+	    "url": "https://your-movie-journal.vercel.app"
+	  }
+	}
+	</script>
+
 	<style>
+		/* --- LUXURY HIGH-END DESIGN SYSTEM --- */
 		:root {
-			--bg: #050505;
-			--panel: #0d0d0d;
-			--text: #f0f0f0;
-			--text-muted: #666666;
-			--accent: #ffffff;
-			--border: #1a1a1a;
+			--bg: #0e1113;                  /* Deep Obsidian Slate */
+			--bg-gradient: radial-gradient(circle at top, #1a1f24 0%, #0e1113 70%);
+			--panel: rgba(22, 27, 31, 0.6); /* Translucent Charcoal */
+			--panel-hover: rgba(30, 37, 43, 0.8);
+			--text: #eef2f5;                /* Crisp Off-White */
+			--text-muted: #8a99a6;          /* Muted Silver-Grey */
+			--border: rgba(255, 255, 255, 0.05);
+			--border-hover: rgba(255, 255, 255, 0.15);
+			--gold: #dfba73;
+			--gold-gradient: linear-gradient(135deg, #fff 30%, #dfba73 100%);
 			--serif: "Baskerville", "Playfair Display", "Times New Roman", serif;
 			--sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
 		}
@@ -31,306 +73,50 @@ const archivalCatalog = sortedPosts;
 		html { scroll-behavior: smooth; }
 
 		body { 
-			background: var(--bg); 
+			background: var(--bg);
+			background-image: var(--bg-gradient);
 			color: var(--text); 
 			font-family: var(--serif); 
-			max-width: 1200px; 
+			max-width: 1240px; 
 			margin: 0 auto; 
-			padding: 0 40px 100px 40px; 
+			padding: 0 40px 60px 40px; 
 			letter-spacing: 0.01em;
-			line-height: 1.65;
+			line-height: 1.7;
 			-webkit-font-smoothing: antialiased;
 		}
 
-		/* --- NAVIGATION --- */
+		/* --- BLURRED STICKY NAVIGATION --- */
 		.sticky-nav {
 			position: sticky;
 			top: 0;
-			background: rgba(5, 5, 5, 0.9);
-			backdrop-filter: blur(12px);
+			background: rgba(14, 17, 19, 0.75);
+			backdrop-filter: blur(20px);
+			-webkit-backdrop-filter: blur(20px);
 			z-index: 100;
 			border-bottom: 1px solid var(--border);
-			padding: 15px 0;
+			padding: 20px 0;
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			font-family: var(--sans);
-			font-size: 0.75rem;
-			text-transform: uppercase;
-			letter-spacing: 2px;
-			color: var(--text-muted);
-		}
-		.sticky-nav a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
-		.sticky-nav a:hover { color: var(--accent); }
-
-		/* --- MASTHEAD --- */
-		header {
-			padding: 80px 0 40px 0;
-			margin-bottom: 60px;
-			text-align: center;
-			border-bottom: 1px solid var(--border);
-		}
-		h1 { 
-			font-weight: normal; 
-			font-size: 4.5rem; 
-			margin: 0; 
-			letter-spacing: 4px; 
-			text-transform: uppercase;
-			line-height: 1;
-		}
-		.tagline { 
-			color: var(--text-muted); 
-			font-size: 0.75rem; 
-			margin-top: 15px; 
-			text-transform: uppercase; 
-			letter-spacing: 5px; 
-			font-family: var(--sans);
-		}
-
-		/* --- SECTIONS LAYOUT --- */
-		section { margin-bottom: 80px; }
-		.section-title {
 			font-family: var(--sans);
 			font-size: 0.75rem;
 			text-transform: uppercase;
 			letter-spacing: 3px;
 			color: var(--text-muted);
-			border-bottom: 1px solid var(--border);
-			padding-bottom: 12px;
-			margin-bottom: 40px;
-			display: flex;
-			justify-content: space-between;
 		}
+		.sticky-nav a { color: var(--text-muted); text-decoration: none; transition: color 0.3s ease; }
+		.sticky-nav a:hover { color: var(--text); }
 
-		/* --- SECTION I: FEATURED REVIEW --- */
-		.lead-feature-grid {
-			display: grid;
-			grid-template-columns: 1.1fr 1fr;
-			gap: 60px;
-			align-items: flex-start;
+		/* --- MASTHEAD WITH METALLIC GRADIENT --- */
+		header {
+			padding: 100px 0 60px 0;
+			text-align: center;
+			position: relative;
 		}
-		@media (max-width: 960px) { .lead-feature-grid { grid-template-columns: 1fr; gap: 30px; } }
-		
-		.lead-poster {
-			border: 1px solid var(--border);
-			box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-			overflow: hidden;
-			background: #000;
-		}
-		.lead-poster img { 
-			width: 100%; 
-			height: auto; 
-			display: block;
-			opacity: 0.9;
-			transition: transform 0.4s, opacity 0.4s;
-		}
-		.lead-poster:hover img { transform: scale(1.01); opacity: 1; }
-		
-		.lead-title { font-size: 3rem; margin: 0 0 10px 0; font-weight: normal; line-height: 1.1; }
-		.lead-meta { font-family: var(--sans); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 25px; }
-		.lead-text { font-size: 1.15rem; color: #d5d5d5; text-align: justify; margin-bottom: 30px; }
-		
-		/* Clean Score Display */
-		.rating-display {
-			font-family: var(--sans);
-			font-size: 0.8rem;
-			letter-spacing: 2px;
+		h1 { 
+			font-weight: normal; 
+			font-size: 5.5rem; 
+			margin: 0; 
+			letter-spacing: 8px; 
 			text-transform: uppercase;
-			display: inline-flex;
-			align-items: center;
-			gap: 8px;
-			border: 1px solid var(--border);
-			padding: 6px 14px;
-			background: var(--panel);
-		}
-		.rating-display strong { color: var(--accent); font-size: 0.9rem; }
-
-		/* --- SECTION II: RECENT REVIEWS --- */
-		.secondary-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-			gap: 50px;
-		}
-		.secondary-card { display: flex; flex-direction: column; }
-		.secondary-poster { 
-			border: 1px solid var(--border); 
-			margin-bottom: 20px; 
-			overflow: hidden; 
-			background: #000;
-		}
-		.secondary-poster img { 
-			width: 100%; 
-			height: 440px; 
-			object-fit: cover; 
-			opacity: 0.8;
-			transition: opacity 0.3s;
-		}
-		.secondary-card:hover .secondary-poster img { opacity: 1; }
-		.secondary-title { font-size: 1.8rem; margin: 0 0 5px 0; font-weight: normal; }
-		.secondary-text { font-size: 1rem; color: #bcbcbc; text-align: justify; }
-
-		/* --- SECTION III: SEARCHABLE ARCHIVE --- */
-		.archive-wrapper { background: var(--panel); border: 1px solid var(--border); padding: 30px; border-radius: 4px; }
-		.archive-controls { margin-bottom: 35px; }
-		#searchBar {
-			width: 100%;
-			box-sizing: border-box;
-			padding: 16px 20px;
-			background: var(--bg);
-			border: 1px solid var(--border);
-			color: var(--text);
-			font-family: var(--sans);
-			font-size: 0.85rem;
-			letter-spacing: 1px;
-			outline: none;
-		}
-		#searchBar:focus { border-color: #444; }
-		
-		.archive-table { display: flex; flex-direction: column; }
-		.archive-header {
-			display: grid;
-			grid-template-columns: 2fr 1.5fr 1fr 1fr;
-			font-family: var(--sans);
-			font-size: 0.7rem;
-			text-transform: uppercase;
-			letter-spacing: 2px;
-			color: var(--text-muted);
-			padding: 12px 15px;
-			border-bottom: 1px solid #333;
-		}
-		.archive-row {
-			display: grid;
-			grid-template-columns: 2fr 1.5fr 1fr 1fr;
-			align-items: center;
-			padding: 18px 15px;
-			border-bottom: 1px solid var(--border);
-			font-size: 1rem;
-		}
-		.archive-row:hover { background: rgba(255,255,255,0.02); }
-		.archive-title { font-weight: normal; font-family: var(--serif); font-size: 1.2rem; color: var(--accent); }
-		.archive-director { font-family: var(--sans); font-size: 0.8rem; color: #999; }
-		.archive-year { font-family: var(--sans); font-size: 0.8rem; color: var(--text-muted); }
-		.archive-rating { font-family: var(--sans); font-size: 0.8rem; color: var(--text); font-weight: 600; }
-		
-		.no-results { display: none; text-align: center; padding: 40px; color: var(--text-muted); font-family: var(--sans); font-size: 0.85rem;}
-	</style>
-</head>
-<body>
-
-	<nav class="sticky-nav">
-		<div>Mise-en-Scène</div>
-		<div>
-			<a href="#featured">Featured</a> • 
-			<a href="#recent">Recent Reviews</a> • 
-			<a href="#archive">Full Archive</a>
-		</div>
-	</nav>
-
-	<header>
-		<h1>Mise-en-Scène</h1>
-		<div class="tagline">Essays and Reviews on Cinema</div>
-	</header>
-
-	{leadFeature && (
-		<section id="featured">
-			<div class="section-title">
-				<span>Featured Review</span>
-			</div>
-			<div class="lead-feature-grid">
-				<div class="lead-poster">
-					<img src={leadFeature.frontmatter.poster} alt={`Poster for ${leadFeature.frontmatter.title}`} />
-				</div>
-				<div class="lead-essay-preview">
-					<h2 class="lead-title">{leadFeature.frontmatter.title}</h2>
-					<div class="lead-meta">
-						{leadFeature.frontmatter.year} &nbsp;•&nbsp; Directed by {leadFeature.frontmatter.director}
-					</div>
-					<div class="lead-text"><leadFeature.Content /></div>
-					<div class="rating-display">
-						Rating: <strong>{leadFeature.frontmatter.rating} / 4.0</strong>
-					</div>
-				</div>
-			</div>
-		</section>
-	)}
-
-	<section id="recent">
-		<div class="section-title">
-			<span>Recent Reviews</span>
-		</div>
-		<div class="secondary-grid">
-			{secondaryFeatures.map(post => (
-				<div class="secondary-card">
-					<div class="secondary-poster">
-						<img src={post.frontmatter.poster} alt={`Poster for ${post.frontmatter.title}`} />
-					</div>
-					<h3 class="secondary-title">{post.frontmatter.title} ({post.frontmatter.year})</h3>
-					<div class="lead-meta" style="margin-bottom:12px;">Dir. {post.frontmatter.director} &nbsp;//&nbsp; Rating: {post.frontmatter.rating}/4.0</div>
-					<div class="secondary-text"><post.Content /></div>
-				</div>
-			))}
-		</div>
-	</section>
-
-	<section id="archive">
-		<div class="section-title">
-			<span>All Rated Movies</span>
-		</div>
-		
-		<div class="archive-wrapper">
-			<div class="archive-controls">
-				<input type="text" id="searchBar" placeholder="Search archive by title, director, or year..." />
-			</div>
-
-			<div class="archive-table">
-				<div class="archive-header">
-					<div>Movie Title</div>
-					<div>Director</div>
-					<div>Year</div>
-					<div>Rating</div>
-				</div>
-
-				<div id="archiveCatalog">
-					{archivalCatalog.map(post => (
-						<div class="archive-row" data-title={post.frontmatter.title} data-director={post.frontmatter.director} data-year={post.frontmatter.year}>
-							<div class="archive-title">{post.frontmatter.title}</div>
-							<div class="archive-director">{post.frontmatter.director}</div>
-							<div class="archive-year">{post.frontmatter.year}</div>
-							<div class="archive-rating">{post.frontmatter.rating} / 4.0</div>
-						</div>
-					))}
-				</div>
-			</div>
-			
-			<div class="no-results" id="noResults">No movies found matching your search.</div>
-		</div>
-	</section>
-
-	<script>
-		const searchBar = document.getElementById('searchBar');
-		const archiveCatalog = document.getElementById('archiveCatalog');
-		const rows = archiveCatalog.getElementsByClassName('archive-row');
-		const noResults = document.getElementById('noResults');
-
-		searchBar.addEventListener('keyup', (e) => {
-			const query = e.target.value.toLowerCase();
-			let matches = 0;
-
-			Array.from(rows).forEach(row => {
-				const title = row.getAttribute('data-title').toLowerCase();
-				const director = row.getAttribute('data-director').toLowerCase();
-				const year = row.getAttribute('data-year').toLowerCase();
-
-				if (title.includes(query) || director.includes(query) || year.includes(query)) {
-					row.style.display = 'grid';
-					matches++;
-				} else {
-					row.style.display = 'none';
-				}
-			});
-
-			noResults.style.display = (matches === 0 && query !== '') ? 'block' : 'none';
-		});
-	</script>
-</body>
-</html>
+			line-height

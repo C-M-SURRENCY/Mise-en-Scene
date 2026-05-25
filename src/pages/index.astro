@@ -8,7 +8,7 @@ const sortedPosts = posts.sort((a, b) => new Date(b.frontmatter.date || 0) - new
 // Editorial Hierarchy Filtering
 const leadFeature = sortedPosts.find(post => post.frontmatter.featured === true) || sortedPosts[0];
 const secondaryFeatures = sortedPosts.filter(post => post.frontmatter.featured !== true).slice(0, 3);
-const archivalCatalog = sortedPosts; // Keep full list for the searchable matrix
+const archivalCatalog = sortedPosts; 
 ---
 
 <html lang="en">
@@ -18,292 +18,181 @@ const archivalCatalog = sortedPosts; // Keep full list for the searchable matrix
 	<title>Mise-en-Scène | Journal of Cinematic Analytics</title>
 	<style>
 		:root {
-			--bg: #0a0a0a;
-			--panel: #111111;
-			--text: #f5f5f5;
-			--text-muted: #707070;
+			--bg: #050505;
+			--panel: #0d0d0d;
+			--text: #f0f0f0;
+			--text-muted: #666666;
 			--accent: #ffffff;
 			--border: #1a1a1a;
-			--serif: "Times New Roman", Times, Baskerville, Georgia, serif;
-			--sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			--gold: #c3a36a;
+			--serif: "Baskerville", "Playfair Display", "Times New Roman", serif;
+			--sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
 		}
 		
+		/* Smooth scrolling for reader comfort */
+		html { scroll-behavior: smooth; }
+
 		body { 
 			background: var(--bg); 
 			color: var(--text); 
 			font-family: var(--serif); 
-			max-width: 1300px; 
+			max-width: 1400px; 
 			margin: 0 auto; 
-			padding: 40px 30px; 
+			padding: 0 40px 100px 40px; 
 			letter-spacing: 0.01em;
-			line-height: 1.6;
+			line-height: 1.65;
+			-webkit-font-smoothing: antialiased;
 		}
 
-		/* --- 1. MASTHEAD & METADATA --- */
-		header {
-			border-bottom: 3px double var(--accent);
-			padding-bottom: 20px;
-			margin-bottom: 60px;
-			text-align: center;
-		}
-		.journal-meta {
+		/* --- READER UTILITY BAR (Sticky Header) --- */
+		.sticky-nav {
+			position: sticky;
+			top: 0;
+			background: rgba(5, 5, 5, 0.9);
+			backdrop-filter: blur(12px);
+			z-index: 100;
+			border-bottom: 1px solid var(--border);
+			padding: 15px 0;
 			display: flex;
 			justify-content: space-between;
+			align-items: center;
 			font-family: var(--sans);
 			font-size: 0.75rem;
 			text-transform: uppercase;
 			letter-spacing: 2px;
 			color: var(--text-muted);
+		}
+		.sticky-nav a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+		.sticky-nav a:hover { color: var(--accent); }
+
+		/* --- MASTHEAD & EDITORIAL IDENTITY --- */
+		header {
+			padding: 80px 0 40px 0;
+			margin-bottom: 60px;
+			text-align: center;
 			border-bottom: 1px solid var(--border);
-			padding-bottom: 8px;
-			margin-bottom: 25px;
 		}
 		h1 { 
 			font-weight: normal; 
-			font-size: 4.2rem; 
+			font-size: 5rem; 
 			margin: 0; 
-			letter-spacing: 4px; 
+			letter-spacing: 6px; 
 			text-transform: uppercase;
 			line-height: 1;
+			font-family: var(--serif);
 		}
 		.tagline { 
 			color: var(--text-muted); 
-			font-size: 0.85rem; 
-			margin-top: 12px; 
+			font-size: 0.75rem; 
+			margin-top: 15px; 
 			text-transform: uppercase; 
-			letter-spacing: 5px; 
+			letter-spacing: 6px; 
 			font-family: var(--sans);
 		}
 
-		/* --- 2. LAYOUT SECTIONS --- */
-		section { margin-bottom: 80px; }
+		/* --- SECTIONS LAYOUT --- */
+		section { margin-bottom: 100px; }
 		.section-title {
 			font-family: var(--sans);
-			font-size: 0.8rem;
+			font-size: 0.75rem;
 			text-transform: uppercase;
-			letter-spacing: 3px;
+			letter-spacing: 4px;
 			color: var(--text-muted);
 			border-bottom: 1px solid var(--border);
-			padding-bottom: 10px;
-			margin-bottom: 30px;
+			padding-bottom: 12px;
+			margin-bottom: 40px;
+			display: flex;
+			justify-content: space-between;
 		}
 
-		/* --- 3. LEAD JOURNAL FEATURE (Auteur Split) --- */
+		/* --- SECTION I: COVER FEATURE ESSAY --- */
 		.lead-feature-grid {
 			display: grid;
-			grid-template-columns: 1.2fr 1fr;
-			gap: 50px;
-			align-items: center;
+			grid-template-columns: 1.1fr 1fr;
+			gap: 60px;
+			align-items: flex-start;
 		}
-		@media (max-width: 900px) { .lead-feature-grid { grid-template-columns: 1fr; } }
+		@media (max-width: 960px) { .lead-feature-grid { grid-template-columns: 1fr; gap: 30px; } }
 		
 		.lead-poster {
 			border: 1px solid var(--border);
-			height: 600px;
+			box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+			position: relative;
 			overflow: hidden;
+			background: #000;
+			transition: border-color 0.4s;
 		}
-		.lead-poster img { width: 100%; height: 100%; object-fit: cover; }
-		.lead-essay-preview { display: flex; flex-direction: column; justify-content: center; }
+		.lead-poster:hover { border-color: #333; }
+		.lead-poster img { 
+			width: 100%; 
+			height: auto; 
+			display: block;
+			opacity: 0.85;
+			transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
+		}
+		.lead-poster:hover img { transform: scale(1.02); opacity: 1; }
+		
+		.lead-essay-preview { padding: 10px 0; }
 		.editorial-badge {
 			font-family: var(--sans);
 			font-size: 0.7rem;
 			text-transform: uppercase;
-			letter-spacing: 2px;
-			color: #a1824a; /* Subtle gold accent for priority features */
-			margin-bottom: 10px;
-			font-weight: bold;
+			letter-spacing: 3px;
+			color: var(--gold);
+			margin-bottom: 15px;
+			display: block;
+			font-weight: 600;
 		}
-		.lead-title { font-size: 2.8rem; margin: 0 0 10px 0; font-weight: normal; line-height: 1.15; }
-		.lead-meta { font-family: var(--sans); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 20px; }
-		.lead-text { font-size: 1.15rem; color: #dddddd; text-align: justify; margin-bottom: 20px; }
-		.lead-evaluation { font-family: var(--sans); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; }
-		.lead-evaluation span { background: #222; padding: 3px 8px; border: 1px solid #333; margin-left: 5px; color: #fff;}
+		.lead-title { font-size: 3.2rem; margin: 0 0 15px 0; font-weight: normal; line-height: 1.1; letter-spacing: -0.5px; }
+		.lead-meta { font-family: var(--sans); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 25px; }
+		.lead-text { font-size: 1.15rem; color: #d5d5d5; text-align: justify; text-justify: inter-word; margin-bottom: 30px; }
+		
+		/* Premium Score Badge */
+		.evaluation-metric {
+			font-family: var(--sans);
+			font-size: 0.8rem;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			border: 1px solid var(--border);
+			padding: 6px 14px;
+			background: var(--panel);
+			border-radius: 2px;
+		}
+		.evaluation-metric strong { color: var(--accent); font-size: 0.9rem; }
 
-		/* --- 4. SECONDARY CRITIQUE FEED --- */
+		/* --- SECTION II: MANIFESTO EMBED --- */
+		.manifesto-box {
+			border-left: 2px solid var(--gold);
+			padding: 20px 0 20px 40px;
+			max-width: 850px;
+			margin: 40px 0;
+		}
+		.manifesto-text { font-size: 1.35rem; font-style: italic; color: #b5b5b5; line-height: 1.7; font-family: var(--serif); }
+
+		/* --- SECTION III: MULTI-COLUMN CRITIQUE GRID --- */
 		.secondary-grid {
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-			gap: 40px;
+			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+			gap: 50px;
 		}
 		.secondary-card { display: flex; flex-direction: column; }
-		.secondary-poster { height: 350px; border: 1px solid var(--border); margin-bottom: 15px; overflow: hidden; }
-		.secondary-poster img { width: 100%; height: 100%; object-fit: cover; }
-		.secondary-title { font-size: 1.6rem; margin: 0 0 5px 0; font-weight: normal; }
-		.secondary-text { font-size: 0.95rem; color: #b5b5b5; text-align: justify; }
-
-		/* --- 5. INTELLECTUAL MANIFESTO PANEL --- */
-		.manifesto-box {
-			background: var(--panel);
-			border: 1px solid var(--border);
-			padding: 40px;
-			text-align: center;
-			max-width: 800px;
-			margin: 0 auto;
+		.secondary-poster { 
+			border: 1px solid var(--border); 
+			margin-bottom: 20px; 
+			overflow: hidden; 
+			background: #000;
+			box-shadow: 0 10px 20px rgba(0,0,0,0.4);
 		}
-		.manifesto-text { font-size: 1.2rem; italic; font-style: italic; color: #ccc; line-height: 1.8; }
-
-		/* --- 6. SEARCHABLE MASTER ARCHIVE MATRIX --- */
-		.archive-controls {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			margin-bottom: 30px;
-			gap: 20px;
+		.secondary-poster img { 
+			width: 100%; 
+			height: 440px; 
+			object-fit: cover; 
+			opacity: 0.8;
+			transition: opacity 0.3s, transform 0.4s;
 		}
-		@media (max-width: 600px) { .archive-controls { flex-direction: column; align-items: stretch; } }
-		
-		#searchBar {
-			flex-grow: 1;
-			padding: 12px 20px;
-			background: var(--panel);
-			border: 1px solid var(--border);
-			color: var(--text);
-			font-family: var(--sans);
-			font-size: 0.85rem;
-			text-transform: uppercase;
-			letter-spacing: 1px;
-			outline: none;
-		}
-		#searchBar:focus { border-color: var(--text-muted); }
-		
-		.matrix-header {
-			display: grid;
-			grid-template-columns: 2fr 1.5fr 1fr 1fr;
-			font-family: var(--sans);
-			font-size: 0.75rem;
-			text-transform: uppercase;
-			letter-spacing: 1px;
-			color: var(--text-muted);
-			padding: 10px 20px;
-			border-bottom: 2px solid var(--text-muted);
-		}
-		.matrix-row {
-			display: grid;
-			grid-template-columns: 2fr 1.5fr 1fr 1fr;
-			align-items: center;
-			padding: 15px 20px;
-			border-bottom: 1px solid var(--border);
-			font-size: 1rem;
-		}
-		.matrix-row:hover { background: #111; }
-		.matrix-title { font-weight: normal; font-family: var(--serif); font-size: 1.1rem; }
-		.matrix-director { font-family: var(--sans); font-size: 0.85rem; color: #aaa; }
-		.matrix-year { font-family: var(--sans); font-size: 0.85rem; color: var(--text-muted); }
-		.matrix-rating { font-family: var(--sans); font-size: 0.85rem; font-weight: bold; }
-		
-		.no-results { display: none; text-align: center; padding: 40px; color: var(--text-muted); font-family: var(--sans); }
-	</style>
-</head>
-<body>
-
-	<header>
-		<div class="journal-meta">
-			<div>Vol. I // No. I</div>
-			<div>Quarterly Edition</div>
-			<div>ISSN 1047-4757</div>
-		</div>
-		<h1>Mise-en-Scène</h1>
-		<div class="tagline">The International Journal of Cinematic Analytics & Architectural Critique</div>
-	</header>
-
-	{leadFeature && (
-		<section>
-			<div class="section-title">Section I // Primary Critical Focus</div>
-			<div class="lead-feature-grid">
-				<div class="lead-poster">
-					<img src={leadFeature.frontmatter.poster} alt="Primary feature visual asset" />
-				</div>
-				<div class="lead-essay-preview">
-					<span class="editorial-badge">Cover Feature / Auteur Analysis</span>
-					<h2 class="lead-title">{leadFeature.frontmatter.title}</h2>
-					<div class="lead-meta">{leadFeature.frontmatter.year} // SYSTEMATIC DISPATCH BY EDITOR-IN-CHIEF</div>
-					<div class="lead-meta" style="margin-top:-15px;">Directed by {leadFeature.frontmatter.director}</div>
-					<div class="lead-text"><leadFeature.Content /></div>
-					<div class="lead-evaluation">
-						Evaluation Index: <span>{leadFeature.frontmatter.rating} / 4.0</span>
-					</div>
-				</div>
-			</div>
-		</section>
-	)}
-
-	<section>
-		<div class="manifesto-box">
-			<p class="manifesto-text">
-				"Cinema is not a reflection of reality, but a architecture of framing. We do not evaluate entertainment value; we dismantle the geometry of the image, the text within the subtext, and the rhythm of the cut."
-			</p>
-		</div>
-	</section>
-
-	<section>
-		<div class="section-title">Section II // Supplementary Technical Analyses</div>
-		<div class="secondary-grid">
-			{secondaryFeatures.map(post => (
-				<div class="secondary-card">
-					<div class="secondary-poster">
-						<img src={post.frontmatter.poster} alt="Cinematic documentation" />
-					</div>
-					<h3 class="secondary-title">{post.frontmatter.title} ({post.frontmatter.year})</h3>
-					<div class="lead-meta" style="margin-bottom:10px;">Dir. {post.frontmatter.director} // Index: {post.frontmatter.rating}/4.0</div>
-					<div class="secondary-text"><post.Content /></div>
-				</div>
-			))}
-		</div>
-	</section>
-
-	<section>
-		<div class="section-title">Section III // Complete Archive Matrix</div>
-		
-		<div class="archive-controls">
-			<input type="text" id="searchBar" placeholder="Query Matrix Index by Title, Director, or Era..." />
-		</div>
-
-		<div class="matrix-header">
-			<div>Composition Title</div>
-			<div>Director</div>
-			<div>Year</div>
-			<div>Evaluation Index</div>
-		</div>
-
-		<div id="matrixCatalog">
-			{archivalCatalog.map(post => (
-				<div class="matrix-row" data-title={post.frontmatter.title} data-director={post.frontmatter.director} data-year={post.frontmatter.year}>
-					<div class="matrix-title">{post.frontmatter.title}</div>
-					<div class="matrix-director">{post.frontmatter.director}</div>
-					<div class="matrix-year">{post.frontmatter.year}</div>
-					<div class="matrix-rating">{post.frontmatter.rating} / 4.0</div>
-				</div>
-			))}
-		</div>
-		
-		<div class="no-results" id="noResults">No archival entries match specified analytical parameters.</div>
-	</section>
-
-	<script>
-		const searchBar = document.getElementById('searchBar');
-		const matrixCatalog = document.getElementById('matrixCatalog');
-		const rows = matrixCatalog.getElementsByClassName('matrix-row');
-		const noResults = document.getElementById('noResults');
-
-		searchBar.addEventListener('keyup', (e) => {
-			const query = e.target.value.toLowerCase();
-			let matches = 0;
-
-			Array.from(rows).forEach(row => {
-				const title = row.getAttribute('data-title').toLowerCase();
-				const director = row.getAttribute('data-director').toLowerCase();
-				const year = row.getAttribute('data-year').toLowerCase();
-
-				if (title.includes(query) || director.includes(query) || year.includes(query)) {
-					row.style.display = 'grid';
-					matches++;
-				} else {
-					row.style.display = 'none';
-				}
-			});
-
-			noResults.style.display = (matches === 0 && query !== '') ? 'block' : 'none';
-		});
-	</script>
-</body>
-</html>
+		.secondary-card:hover .secondary-poster img { opacity: 1; transform: scale(1.01); }
+		.secondary-title { font-size: 1.8rem; margin: 0 0 5px 0; font-weight: normal; }
+		.secondary-text { font-size: 1rem; color: #bc

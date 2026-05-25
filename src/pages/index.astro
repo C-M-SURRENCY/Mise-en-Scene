@@ -1,7 +1,7 @@
 ---
 const posts = await Astro.glob('./posts/*.md');
 
-const sortedPosts = posts
+const normalizedPosts = posts
   .map((post) => ({
     ...post,
     title: post.frontmatter.title || 'Untitled Film',
@@ -9,23 +9,25 @@ const sortedPosts = posts
     year: post.frontmatter.year || 'Unknown Year',
     rating: post.frontmatter.rating || 'Unrated',
     poster: post.frontmatter.poster || '',
-    description:
+    date: post.frontmatter.date || '1900-01-01',
+    featured: post.frontmatter.featured === true,
+    dek:
+      post.frontmatter.dek ||
       post.frontmatter.description ||
       post.frontmatter.summary ||
       post.frontmatter.excerpt ||
       'A critical dispatch from the archive.',
-    date: post.frontmatter.date || '1900-01-01',
   }))
   .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
 
 const leadFeature =
-  sortedPosts.find((post) => post.frontmatter.featured === true) ||
-  sortedPosts[0] ||
+  normalizedPosts.find((post) => post.featured) ||
+  normalizedPosts[0] ||
   null;
 
 const LeadContent = leadFeature?.Content;
-const secondaryFeatures = sortedPosts.filter((post) => post !== leadFeature).slice(0, 3);
-const archivalCatalog = sortedPosts;
+const recentPosts = normalizedPosts.filter((post) => post !== leadFeature).slice(0, 3);
+const archivePosts = normalizedPosts;
 ---
 
 <html lang="en">
@@ -35,35 +37,26 @@ const archivalCatalog = sortedPosts;
   <title>Mise-en-Scène | Film Journal</title>
   <meta
     name="description"
-    content="Mise-en-Scène is a curated film journal of reviews, criticism, and cinematic dispatches."
+    content="A refined film journal for criticism, visual essays, and close readings of cinema."
   />
-
-  <script type="application/ld+json" set:html={JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Mise-en-Scène",
-    "url": "https://mise-en-scene-sable.vercel.app",
-    "publisher": {
-      "@type": "Organization",
-      "name": "Mise-en-Scène"
-    }
-  })} />
 
   <style>
     :root {
-      --bg: #101416;
-      --surface: #151b1f;
-      --surface-2: #1d2429;
-      --ink: #f4efe6;
-      --muted: #9da7ad;
-      --soft: #c9d0d4;
-      --line: rgba(255, 255, 255, 0.1);
-      --line-strong: rgba(255, 255, 255, 0.18);
-      --gold: #d8b36a;
-      --red: #6f3438;
-      --shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+      --bg: #0d1112;
+      --bg-2: #14191b;
+      --panel: rgba(20, 25, 27, 0.82);
+      --panel-2: rgba(27, 32, 35, 0.82);
+      --ink: #f2eee6;
+      --muted: #a7adb0;
+      --quiet: #727b80;
+      --line: rgba(255, 255, 255, 0.11);
+      --line-strong: rgba(255, 255, 255, 0.2);
+      --gold: #d7b56d;
+      --wine: #623339;
+      --wine-2: #42262b;
       --serif: Georgia, "Times New Roman", serif;
       --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --shadow: 0 34px 90px rgba(0, 0, 0, 0.48);
     }
 
     * {
@@ -77,15 +70,26 @@ const archivalCatalog = sortedPosts;
 
     body {
       margin: 0;
+      min-height: 100vh;
       color: var(--ink);
       font-family: var(--serif);
-      line-height: 1.65;
+      line-height: 1.68;
       background:
-        linear-gradient(180deg, rgba(111, 52, 56, 0.58) 0, rgba(111, 52, 56, 0.2) 18px, transparent 18px),
-        radial-gradient(circle at 18% 0%, rgba(216, 179, 106, 0.08), transparent 34rem),
-        linear-gradient(180deg, #151a1e 0%, #101416 42%, #0c1012 100%);
-      min-height: 100vh;
+        radial-gradient(circle at 16% 0%, rgba(215, 181, 109, 0.1), transparent 34rem),
+        radial-gradient(circle at 86% 16%, rgba(98, 51, 57, 0.2), transparent 30rem),
+        linear-gradient(180deg, #171c1f 0%, #0d1112 46%, #090c0d 100%);
       -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 18px;
+      z-index: 100;
+      pointer-events: none;
+      background: linear-gradient(90deg, var(--wine-2), var(--wine), var(--wine-2));
+      box-shadow: 0 10px 28px rgba(98, 51, 57, 0.38);
     }
 
     a {
@@ -94,288 +98,350 @@ const archivalCatalog = sortedPosts;
     }
 
     img {
-      max-width: 100%;
       display: block;
+      max-width: 100%;
     }
 
-    .site-shell {
-      width: min(1550px, calc(100% - 48px));
+    .shell {
+      width: min(1520px, calc(100% - 48px));
       margin: 0 auto;
+      padding-top: 18px;
     }
 
     .topbar {
-      position: sticky;
-      top: 18px;
-      z-index: 20;
-      margin-top: 18px;
+      position: relative;
+      z-index: 10;
       border: 1px solid var(--line);
-      background: rgba(13, 18, 20, 0.84);
-      backdrop-filter: blur(18px);
-      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+      background:
+        linear-gradient(90deg, rgba(10, 14, 15, 0.98), rgba(17, 22, 24, 0.96));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
     }
 
     .topbar-inner {
-      min-height: 74px;
+      min-height: 78px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 28px;
-      padding: 0 30px;
+      padding: 0 34px;
     }
 
     .brand {
       font-family: var(--sans);
-      font-size: 0.92rem;
+      font-size: 0.86rem;
       font-weight: 800;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.28em;
       text-transform: uppercase;
       white-space: nowrap;
     }
 
-    .nav-links {
+    .nav {
       display: flex;
       align-items: center;
       justify-content: flex-end;
       gap: 18px;
       color: var(--muted);
       font-family: var(--sans);
-      font-size: 0.76rem;
+      font-size: 0.72rem;
       letter-spacing: 0.34em;
       text-transform: uppercase;
       white-space: nowrap;
     }
 
-    .nav-links a {
+    .nav a {
       transition: color 180ms ease;
     }
 
-    .nav-links a:hover {
+    .nav a:hover {
       color: var(--ink);
     }
 
-    .nav-dot {
-      color: rgba(216, 179, 106, 0.72);
+    .dot {
+      color: rgba(215, 181, 109, 0.78);
       letter-spacing: 0;
     }
 
     .hero {
-      min-height: 420px;
+      min-height: 560px;
       display: grid;
       align-items: end;
-      padding: 92px 0 74px;
+      padding: 112px 0 82px;
       border-bottom: 1px solid var(--line);
     }
 
-    .kicker {
-      margin: 0 0 18px;
+    .eyebrow {
+      margin: 0 0 20px;
       color: var(--gold);
       font-family: var(--sans);
-      font-size: 0.74rem;
-      letter-spacing: 0.34em;
+      font-size: 0.72rem;
+      letter-spacing: 0.38em;
       text-transform: uppercase;
     }
 
     h1 {
-      max-width: 1050px;
+      max-width: 1120px;
       margin: 0;
-      font-size: clamp(3.8rem, 10vw, 9.6rem);
-      line-height: 0.9;
+      font-size: clamp(4.25rem, 10vw, 10.6rem);
+      line-height: 0.86;
       font-weight: 400;
       letter-spacing: 0;
     }
 
-    .tagline {
-      max-width: 760px;
-      margin: 28px 0 0;
-      color: var(--soft);
+    .intro {
+      max-width: 820px;
+      margin: 34px 0 0;
+      color: #d9ddd8;
       font-family: var(--sans);
-      font-size: clamp(1rem, 1.5vw, 1.18rem);
-      line-height: 1.75;
+      font-size: clamp(1.02rem, 1.45vw, 1.18rem);
+      line-height: 1.85;
     }
 
-    section {
-      padding: 74px 0;
+    .index-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       border-bottom: 1px solid var(--line);
     }
 
-    .section-heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      margin-bottom: 34px;
+    .index-item {
+      padding: 24px 26px;
+      border-right: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.018);
+    }
+
+    .index-item:last-child {
+      border-right: 0;
+    }
+
+    .index-label {
+      color: var(--quiet);
       font-family: var(--sans);
-      color: var(--muted);
-      font-size: 0.75rem;
-      letter-spacing: 0.3em;
+      font-size: 0.68rem;
+      letter-spacing: 0.28em;
       text-transform: uppercase;
     }
 
-    .section-heading::after {
+    .index-value {
+      margin-top: 8px;
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 1.42rem;
+      line-height: 1.2;
+    }
+
+    section {
+      padding: 78px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 36px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+    }
+
+    .section-title::after {
       content: "";
       height: 1px;
       flex: 1;
       background: var(--line);
     }
 
-    .lead-grid {
+    .featured {
       display: grid;
-      grid-template-columns: minmax(300px, 0.92fr) minmax(360px, 1.08fr);
-      gap: clamp(34px, 5vw, 78px);
+      grid-template-columns: minmax(320px, 0.88fr) minmax(380px, 1.12fr);
+      gap: clamp(36px, 5.4vw, 86px);
       align-items: center;
     }
 
-    .poster-frame {
+    .poster {
       overflow: hidden;
       border: 1px solid var(--line-strong);
-      background: #080a0b;
+      background: #050707;
       box-shadow: var(--shadow);
     }
 
-    .poster-frame img {
+    .poster img {
       width: 100%;
       aspect-ratio: 3 / 4;
       object-fit: cover;
-      opacity: 0.92;
-      transition: transform 500ms ease, opacity 300ms ease;
+      opacity: 0.94;
+      filter: saturate(0.92) contrast(1.04);
+      transition: transform 600ms ease, opacity 300ms ease;
     }
 
-    .poster-frame:hover img {
+    .poster:hover img {
       transform: scale(1.025);
       opacity: 1;
     }
 
-    .poster-placeholder {
+    .poster-empty {
       min-height: 560px;
       display: grid;
       place-items: center;
-      color: var(--muted);
+      color: var(--quiet);
       font-family: var(--sans);
       background:
-        linear-gradient(135deg, rgba(216, 179, 106, 0.08), transparent),
-        #080a0b;
+        linear-gradient(135deg, rgba(215, 181, 109, 0.08), transparent),
+        #050707;
     }
 
-    .lead-title {
+    .feature-kicker {
+      margin: 0 0 14px;
+      color: var(--gold);
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    .feature-title {
       margin: 0;
-      font-size: clamp(2.5rem, 5vw, 5.2rem);
-      line-height: 0.98;
+      font-size: clamp(2.8rem, 5vw, 5.7rem);
+      line-height: 0.96;
       font-weight: 400;
       letter-spacing: 0;
     }
 
     .meta {
-      margin: 18px 0 28px;
+      margin: 20px 0 28px;
       color: var(--muted);
       font-family: var(--sans);
-      font-size: 0.82rem;
-      letter-spacing: 0.18em;
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
     }
 
-    .lead-copy {
-      max-width: 720px;
-      color: #d7ddd9;
-      font-size: 1.13rem;
+    .feature-copy {
+      max-width: 760px;
+      color: #d8ddd9;
+      font-size: 1.15rem;
     }
 
-    .lead-copy :global(p:first-child) {
+    .feature-copy :global(p:first-child) {
       margin-top: 0;
     }
 
-    .rating {
+    .score-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .score {
       display: inline-flex;
       align-items: center;
       gap: 12px;
-      margin-top: 26px;
-      padding: 12px 16px;
-      border: 1px solid rgba(216, 179, 106, 0.35);
-      background: rgba(216, 179, 106, 0.07);
+      min-height: 46px;
+      padding: 0 16px;
+      border: 1px solid rgba(215, 181, 109, 0.36);
+      background: rgba(215, 181, 109, 0.075);
       color: var(--gold);
       font-family: var(--sans);
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       letter-spacing: 0.18em;
       text-transform: uppercase;
     }
 
-    .rating strong {
+    .score strong {
       color: var(--ink);
       letter-spacing: 0.08em;
     }
 
-    .cards {
+    .reviews {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 26px;
     }
 
-    .card {
+    .review-card {
       border: 1px solid var(--line);
-      background: rgba(21, 27, 31, 0.74);
+      background: rgba(20, 25, 27, 0.72);
       transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
     }
 
-    .card:hover {
+    .review-card:hover {
       transform: translateY(-5px);
       border-color: var(--line-strong);
-      background: rgba(29, 36, 41, 0.9);
+      background: rgba(27, 32, 35, 0.92);
     }
 
-    .card-image {
-      background: #080a0b;
+    .review-image {
       border-bottom: 1px solid var(--line);
+      background: #050707;
     }
 
-    .card-image img {
+    .review-image img {
       width: 100%;
       aspect-ratio: 4 / 5;
       object-fit: cover;
-      opacity: 0.9;
+      opacity: 0.92;
+      filter: saturate(0.9) contrast(1.04);
     }
 
-    .card-body {
-      padding: 24px;
+    .review-body {
+      padding: 25px;
     }
 
-    .card h3 {
+    .review-body h3 {
       margin: 0;
-      font-size: clamp(1.55rem, 2vw, 2rem);
-      line-height: 1.08;
+      font-size: clamp(1.62rem, 2vw, 2.15rem);
+      line-height: 1.05;
       font-weight: 400;
+      letter-spacing: 0;
     }
 
-    .card p {
+    .review-body p {
       margin: 18px 0 0;
-      color: var(--soft);
+      color: #c8cfcb;
       font-size: 1rem;
     }
 
     .archive-panel {
       border: 1px solid var(--line);
-      background: rgba(21, 27, 31, 0.72);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+      background: rgba(20, 25, 27, 0.74);
+      box-shadow: 0 26px 70px rgba(0, 0, 0, 0.3);
     }
 
     .archive-tools {
       padding: 24px;
       border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
     }
 
     #searchBar {
       width: 100%;
-      min-height: 54px;
+      min-height: 56px;
       border: 1px solid var(--line);
       border-radius: 0;
       padding: 0 18px;
       color: var(--ink);
-      background: rgba(9, 12, 14, 0.72);
+      background: rgba(7, 10, 11, 0.76);
       font-family: var(--sans);
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       outline: none;
     }
 
     #searchBar:focus {
-      border-color: rgba(216, 179, 106, 0.62);
+      border-color: rgba(215, 181, 109, 0.65);
+    }
+
+    .archive-count {
+      color: var(--quiet);
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .archive-header,
@@ -388,16 +454,16 @@ const archivalCatalog = sortedPosts;
 
     .archive-header {
       padding: 16px 24px;
-      color: var(--muted);
+      color: var(--quiet);
       font-family: var(--sans);
-      font-size: 0.7rem;
-      letter-spacing: 0.24em;
+      font-size: 0.68rem;
+      letter-spacing: 0.26em;
       text-transform: uppercase;
       border-bottom: 1px solid var(--line);
     }
 
     .archive-row {
-      padding: 19px 24px;
+      padding: 20px 24px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.065);
       transition: background 180ms ease;
     }
@@ -411,12 +477,13 @@ const archivalCatalog = sortedPosts;
     }
 
     .archive-title {
-      font-size: 1.22rem;
+      font-size: 1.24rem;
+      line-height: 1.25;
     }
 
     .archive-director,
     .archive-year {
-      color: var(--soft);
+      color: #c2c9c5;
       font-family: var(--sans);
       font-size: 0.88rem;
     }
@@ -430,7 +497,7 @@ const archivalCatalog = sortedPosts;
 
     .empty,
     .no-results {
-      padding: 42px 24px;
+      padding: 46px 24px;
       color: var(--muted);
       text-align: center;
       font-family: var(--sans);
@@ -441,23 +508,18 @@ const archivalCatalog = sortedPosts;
     }
 
     footer {
-      padding: 38px 0 52px;
-      color: var(--muted);
+      padding: 42px 0 56px;
+      color: var(--quiet);
       font-family: var(--sans);
-      font-size: 0.74rem;
-      letter-spacing: 0.22em;
+      font-size: 0.72rem;
+      letter-spacing: 0.24em;
       text-align: center;
       text-transform: uppercase;
     }
 
-    @media (max-width: 900px) {
-      .site-shell {
-        width: min(100% - 28px, 1550px);
-      }
-
-      .topbar {
-        top: 10px;
-        margin-top: 10px;
+    @media (max-width: 960px) {
+      .shell {
+        width: min(100% - 28px, 1520px);
       }
 
       .topbar-inner {
@@ -467,7 +529,7 @@ const archivalCatalog = sortedPosts;
         flex-direction: column;
       }
 
-      .nav-links {
+      .nav {
         width: 100%;
         justify-content: flex-start;
         flex-wrap: wrap;
@@ -478,17 +540,31 @@ const archivalCatalog = sortedPosts;
       }
 
       .hero {
-        min-height: 360px;
-        padding: 64px 0 54px;
+        min-height: 440px;
+        padding: 78px 0 62px;
       }
 
-      .lead-grid,
-      .cards {
+      .index-strip,
+      .featured,
+      .reviews {
         grid-template-columns: 1fr;
       }
 
-      .poster-placeholder {
-        min-height: 380px;
+      .index-item {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .index-item:last-child {
+        border-bottom: 0;
+      }
+
+      .poster-empty {
+        min-height: 390px;
+      }
+
+      .archive-tools {
+        grid-template-columns: 1fr;
       }
 
       .archive-header {
@@ -502,33 +578,33 @@ const archivalCatalog = sortedPosts;
 
       .archive-director::before {
         content: "Director: ";
-        color: var(--muted);
+        color: var(--quiet);
       }
 
       .archive-year::before {
         content: "Year: ";
-        color: var(--muted);
+        color: var(--quiet);
       }
 
       .archive-rating::before {
         content: "Score: ";
-        color: var(--muted);
+        color: var(--quiet);
       }
     }
   </style>
 </head>
 
 <body>
-  <div class="site-shell">
+  <div class="shell">
     <nav class="topbar" aria-label="Primary navigation">
       <div class="topbar-inner">
         <a class="brand" href="#">Mise-en-Scène</a>
 
-        <div class="nav-links">
+        <div class="nav">
           <a href="#featured">Featured Review</a>
-          <span class="nav-dot">•</span>
+          <span class="dot">•</span>
           <a href="#recent">Recent Additions</a>
-          <span class="nav-dot">•</span>
+          <span class="dot">•</span>
           <a href="#archive">The Archive</a>
         </div>
       </div>
@@ -536,43 +612,63 @@ const archivalCatalog = sortedPosts;
 
     <header class="hero">
       <div>
-        <p class="kicker">Film criticism and visual essays</p>
+        <p class="eyebrow">A journal of cinema, memory, and image-making</p>
         <h1>Mise-en-Scène</h1>
-        <p class="tagline">
-          A curated journal for modern cinema, built around atmosphere, authorship,
-          performance, and the images that refuse to leave the mind.
+        <p class="intro">
+          A refined notebook for films that linger after the final frame:
+          studies in atmosphere, performance, composition, silence, obsession,
+          and the private weather of cinema.
         </p>
       </div>
     </header>
 
+    <div class="index-strip" aria-label="Journal summary">
+      <div class="index-item">
+        <div class="index-label">Editorial Focus</div>
+        <div class="index-value">Close readings of modern and classic cinema</div>
+      </div>
+      <div class="index-item">
+        <div class="index-label">Archive</div>
+        <div class="index-value">{archivePosts.length} cataloged dispatches</div>
+      </div>
+      <div class="index-item">
+        <div class="index-label">Publisher</div>
+        <div class="index-value">Cayden Mcguire Surrency</div>
+      </div>
+    </div>
+
     <main>
       <section id="featured">
-        <div class="section-heading">
+        <div class="section-title">
           <span>Featured Analysis</span>
         </div>
 
         {leadFeature ? (
-          <div class="lead-grid">
-            <div class="poster-frame">
+          <div class="featured">
+            <div class="poster">
               {leadFeature.poster ? (
                 <img src={leadFeature.poster} alt={`Poster for ${leadFeature.title}`} loading="eager" />
               ) : (
-                <div class="poster-placeholder">No Poster Available</div>
+                <div class="poster-empty">No Poster Available</div>
               )}
             </div>
 
             <article>
-              <h2 class="lead-title">{leadFeature.title}</h2>
+              <p class="feature-kicker">Current Selection</p>
+              <h2 class="feature-title">{leadFeature.title}</h2>
+
               <div class="meta">
                 {leadFeature.year} / Directed by {leadFeature.director}
               </div>
 
-              <div class="lead-copy">
-                {LeadContent ? <LeadContent /> : <p>{leadFeature.description}</p>}
+              <div class="feature-copy">
+                {LeadContent ? <LeadContent /> : <p>{leadFeature.dek}</p>}
               </div>
 
-              <div class="rating">
-                Review Score <strong>{leadFeature.rating} / 4.0</strong>
+              <div class="score-row">
+                <div class="score">
+                  Review Score <strong>{leadFeature.rating} / 4.0</strong>
+                </div>
               </div>
             </article>
           </div>
@@ -584,28 +680,28 @@ const archivalCatalog = sortedPosts;
       </section>
 
       <section id="recent">
-        <div class="section-heading">
+        <div class="section-title">
           <span>Recent Additions</span>
         </div>
 
-        {secondaryFeatures.length > 0 ? (
-          <div class="cards">
-            {secondaryFeatures.map((post) => (
-              <article class="card">
-                <div class="card-image">
+        {recentPosts.length > 0 ? (
+          <div class="reviews">
+            {recentPosts.map((post) => (
+              <article class="review-card">
+                <div class="review-image">
                   {post.poster ? (
                     <img src={post.poster} alt={`Poster for ${post.title}`} loading="lazy" />
                   ) : (
-                    <div class="poster-placeholder">No Poster</div>
+                    <div class="poster-empty">No Poster</div>
                   )}
                 </div>
 
-                <div class="card-body">
+                <div class="review-body">
                   <h3>{post.title}</h3>
                   <div class="meta">
                     {post.year} / {post.director} / {post.rating} out of 4
                   </div>
-                  <p>{post.description}</p>
+                  <p>{post.dek}</p>
                 </div>
               </article>
             ))}
@@ -616,7 +712,7 @@ const archivalCatalog = sortedPosts;
       </section>
 
       <section id="archive">
-        <div class="section-heading">
+        <div class="section-title">
           <span>The Archive</span>
         </div>
 
@@ -626,8 +722,9 @@ const archivalCatalog = sortedPosts;
               type="search"
               id="searchBar"
               placeholder="Search by film, director, or year"
-              aria-label="Search archive"
+              aria-label="Search the archive"
             />
+            <div class="archive-count">{archivePosts.length} entries</div>
           </div>
 
           <div class="archive-header">
@@ -638,7 +735,7 @@ const archivalCatalog = sortedPosts;
           </div>
 
           <div id="archiveCatalog">
-            {archivalCatalog.map((post) => (
+            {archivePosts.map((post) => (
               <div
                 class="archive-row"
                 data-title={post.title}

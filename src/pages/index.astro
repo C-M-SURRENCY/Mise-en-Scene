@@ -1,26 +1,168 @@
 ---
+// Fetch all markdown posts dynamically
 const posts = await Astro.glob('./posts/*.md');
+
+// Sort posts so your newest reviews show up first
+const sortedPosts = posts.sort((a, b) => new Date(b.frontmatter.date || 0) - new Date(a.frontmatter.date || 0));
 ---
+
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Mise-en-Scène</title>
 	<style>
-		body { background: #050505; color: #e5e5e5; font-family: serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
-		h1 { font-weight: normal; letter-spacing: -1px; border-bottom: 1px solid #222; padding-bottom: 10px; }
-		.post { margin-bottom: 40px; }
-		a { color: #999; text-decoration: none; }
-		a:hover { color: #fff; }
+		:root {
+			--bg: #050505;
+			--panel: #111111;
+			--text: #e5e5e5;
+			--text-muted: #666;
+			--accent: #ffffff;
+			--border: #222222;
+		}
+		body { 
+			background: var(--bg); 
+			color: var(--text); 
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+			max-width: 1100px; 
+			margin: 0 auto; 
+			padding: 40px 20px; 
+		}
+		header {
+			border-bottom: 1px solid var(--border);
+			padding-bottom: 20px;
+			margin-bottom: 40px;
+		}
+		h1 { font-family: serif; font-weight: normal; font-size: 2.5rem; margin: 0; letter-spacing: -1px; }
+		.subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+		
+		/* Search Bar */
+		.search-container { margin-bottom: 40px; }
+		#searchBar {
+			width: 100%;
+			padding: 15px;
+			background: var(--panel);
+			border: 1px solid var(--border);
+			color: var(--text);
+			font-size: 1rem;
+			border-radius: 4px;
+			outline: none;
+		}
+		#searchBar:focus { border-color: var(--accent); }
+
+		/* Review Dashboard Grid */
+		.grid { 
+			display: grid; 
+			grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+			gap: 40px; 
+		}
+		.card { 
+			background: var(--panel); 
+			border: 1px solid var(--border); 
+			border-radius: 6px;
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+		}
+		
+		/* Poster Scraper Frame */
+		.poster-frame {
+			width: 100%;
+			height: 450px;
+			background: #151515;
+			overflow: hidden;
+		}
+		.poster-frame img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+		
+		/* Content Layout */
+		.card-content { padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; }
+		.movie-title { font-family: serif; font-size: 1.6rem; margin: 0 0 5px 0; font-weight: normal; }
+		.meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px; }
+		
+		/* Clean Fraction Rating */
+		.rating {
+			font-family: serif;
+			font-size: 1.2rem;
+			font-weight: bold;
+			color: var(--accent);
+			margin-bottom: 15px;
+			border-bottom: 1px solid var(--border);
+			padding-bottom: 10px;
+		}
+		
+		/* The Actual Review Text */
+		.review-text { 
+			font-size: 0.95rem; 
+			color: #cccccc; 
+			line-height: 1.6; 
+			margin: 0;
+		}
+		
+		.no-results { display: none; text-align: center; color: var(--text-muted); margin-top: 40px; }
 	</style>
 </head>
 <body>
-	<h1>Mise-en-Scène</h1>
-	{posts.map(post => (
-		<div class="post">
-			<h2>{post.frontmatter.title} ({post.frontmatter.year})</h2>
-			<p><em>Directed by {post.frontmatter.director}</em></p>
-			<article><post.Content /></article>
-		</div>
-	))}
+
+	<header>
+		<h1>Mise-en-Scène</h1>
+		<div class="subtitle">Personal Film Index & Analysis</div>
+	</header>
+
+	<div class="search-container">
+		<input type="text" id="searchBar" placeholder="Search dashboard by movie title, director, or year..." />
+	</div>
+
+	<main class="grid" id="movieGrid">
+		{sortedPosts.map(post => (
+			<div class="card" data-title={post.frontmatter.title} data-director={post.frontmatter.director} data-year={post.frontmatter.year}>
+				<div class="poster-frame">
+					{post.frontmatter.poster && (
+						<img src={post.frontmatter.poster} alt={`Poster for ${post.frontmatter.title}`} />
+					)}
+				</div>
+				<div class="card-content">
+					<div>
+						<h2 class="movie-title">{post.frontmatter.title}</h2>
+						<div class="meta">{post.frontmatter.year} • Directed by {post.frontmatter.director}</div>
+						<div class="rating">Rating: {post.frontmatter.rating}/4</div>
+						<p class="review-text"><post.Content /></p>
+					</div>
+				</div>
+			</div>
+		))}
+	</main>
+
+	<div class="no-results" id="noResults">No films found matching that search.</div>
+
+	<script>
+		const searchBar = document.getElementById('searchBar');
+		const movieGrid = document.getElementById('movieGrid');
+		const cards = movieGrid.getElementsByClassName('card');
+		const noResults = document.getElementById('noResults');
+
+		searchBar.addEventListener('keyup', (e) => {
+			const searchString = e.target.value.toLowerCase();
+			let matches = 0;
+
+			Array.from(cards).forEach(card => {
+				const title = card.getAttribute('data-title').toLowerCase();
+				const director = card.getAttribute('data-director').toLowerCase();
+				const year = card.getAttribute('data-year').toLowerCase();
+
+				if (title.includes(searchString) || director.includes(searchString) || year.includes(searchString)) {
+					card.style.display = 'flex';
+					matches++;
+				} else {
+					card.style.display = 'none';
+				}
+			});
+
+			noResults.style.display = (matches === 0 && searchString !== '') ? 'block' : 'none';
+		});
+	</script>
 </body>
 </html>

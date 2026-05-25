@@ -1,447 +1,702 @@
 ---
-// Fetch all markdown dispatches dynamically from the posts folder
 const posts = await Astro.glob('./posts/*.md');
 
-// Sort posts chronologically (Newest First)
-const sortedPosts = posts.sort((a, b) => new Date(b.frontmatter.date || 0) - new Date(a.frontmatter.date || 0));
+const sortedPosts = posts
+  .map((post) => ({
+    ...post,
+    title: post.frontmatter.title || 'Untitled Film',
+    director: post.frontmatter.director || 'Unknown Director',
+    year: post.frontmatter.year || 'Unknown Year',
+    rating: post.frontmatter.rating || 'Unrated',
+    poster: post.frontmatter.poster || '',
+    description:
+      post.frontmatter.description ||
+      post.frontmatter.summary ||
+      post.frontmatter.excerpt ||
+      'A critical dispatch from the archive.',
+    date: post.frontmatter.date || '1900-01-01',
+  }))
+  .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
 
-// Editorial Hierarchy Filtering with fallback protection
-const leadFeature = sortedPosts.find(post => post.frontmatter.featured === true) || sortedPosts[0] || null;
-const secondaryFeatures = sortedPosts.filter(post => post !== leadFeature).slice(0, 3);
-const archivalCatalog = sortedPosts; 
+const leadFeature =
+  sortedPosts.find((post) => post.frontmatter.featured === true) ||
+  sortedPosts[0] ||
+  null;
+
+const LeadContent = leadFeature?.Content;
+const secondaryFeatures = sortedPosts.filter((post) => post !== leadFeature).slice(0, 3);
+const archivalCatalog = sortedPosts;
 ---
 
 <html lang="en">
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Mise-en-Scène | Film Journal</title>
-	
-	<script type="application/ld+json" set:html={JSON.stringify({
-	  "@context": "https://schema.org/",
-	  "@type": "Review",
-	  "itemReviewed": {
-	    "@type": "Movie",
-	    "name": leadFeature?.frontmatter?.title || "Mise-en-Scène",
-	    "director": {
-	      "@type": "Person",
-	      "name": leadFeature?.frontmatter?.director || "Cinema"
-	    },
-	    "dateCreated": leadFeature?.frontmatter?.year || "2026"
-	  },
-	  "reviewRating": {
-	    "@type": "Rating",
-	    "ratingValue": leadFeature?.frontmatter?.rating || "4.0",
-	    "bestRating": "4.0",
-	    "worstRating": "0.0"
-	  },
-	  "author": {
-	    "@type": "Person",
-	    "name": "Cayden Mcguire Surrency"
-	  },
-	  "publisher": {
-	    "@type": "Organization",
-	    "name": "Mise-en-Scène",
-	    "url": "https://your-movie-journal.vercel.app"
-	  }
-	})} />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mise-en-Scène | Film Journal</title>
+  <meta
+    name="description"
+    content="Mise-en-Scène is a curated film journal of reviews, criticism, and cinematic dispatches."
+  />
 
-	<style>
-		/* --- LUXURY HIGH-END DESIGN SYSTEM --- */
-		:root {
-			--bg: #0e1113;                  /* Deep Obsidian Slate */
-			--bg-gradient: radial-gradient(circle at top, #1a1f24 0%, #0e1113 70%);
-			--panel: rgba(22, 27, 31, 0.6); /* Translucent Charcoal */
-			--panel-hover: rgba(30, 37, 43, 0.8);
-			--text: #eef2f5;                /* Crisp Off-White */
-			--text-muted: #8a99a6;          /* Muted Silver-Grey */
-			--border: rgba(255, 255, 255, 0.05);
-			--border-hover: rgba(255, 255, 255, 0.15);
-			--gold: #dfba73;
-			--gold-gradient: linear-gradient(135deg, #fff 30%, #dfba73 100%);
-			--serif: "Baskerville", "Playfair Display", "Times New Roman", serif;
-			--sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
-		}
-		
-		html { scroll-behavior: smooth; }
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Mise-en-Scène",
+    "url": "https://mise-en-scene-sable.vercel.app",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Mise-en-Scène"
+    }
+  })} />
 
-		body { 
-			background: var(--bg);
-			background-image: var(--bg-gradient);
-			color: var(--text); 
-			font-family: var(--serif); 
-			max-width: 1240px; 
-			margin: 0 auto; 
-			padding: 0 40px 60px 40px; 
-			letter-spacing: 0.01em;
-			line-height: 1.7;
-			-webkit-font-smoothing: antialiased;
-		}
+  <style>
+    :root {
+      --bg: #101416;
+      --surface: #151b1f;
+      --surface-2: #1d2429;
+      --ink: #f4efe6;
+      --muted: #9da7ad;
+      --soft: #c9d0d4;
+      --line: rgba(255, 255, 255, 0.1);
+      --line-strong: rgba(255, 255, 255, 0.18);
+      --gold: #d8b36a;
+      --red: #6f3438;
+      --shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
 
-		/* --- BLURRED STICKY NAVIGATION --- */
-		.sticky-nav {
-			position: sticky;
-			top: 0;
-			background: rgba(14, 17, 19, 0.75);
-			backdrop-filter: blur(20px);
-			-webkit-backdrop-filter: blur(20px);
-			z-index: 100;
-			border-bottom: 1px solid var(--border);
-			padding: 20px 0;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			font-family: var(--sans);
-			font-size: 0.75rem;
-			text-transform: uppercase;
-			letter-spacing: 3px;
-			color: var(--text-muted);
-		}
-		.sticky-nav a { color: var(--text-muted); text-decoration: none; transition: color 0.3s ease; }
-		.sticky-nav a:hover { color: var(--text); }
+    * {
+      box-sizing: border-box;
+    }
 
-		/* --- MASTHEAD WITH METALLIC GRADIENT --- */
-		header {
-			padding: 100px 0 60px 0;
-			text-align: center;
-			position: relative;
-		}
-		h1 { 
-			font-weight: normal; 
-			font-size: 5.5rem; 
-			margin: 0; 
-			letter-spacing: 8px; 
-			text-transform: uppercase;
-			line-height: 1;
-			background: var(--gold-gradient);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			display: inline-block;
-		}
-		.tagline { 
-			color: var(--text-muted); 
-			font-size: 0.75rem; 
-			margin-top: 20px; 
-			text-transform: uppercase; 
-			letter-spacing: 6px; 
-			font-family: var(--sans);
-		}
+    html {
+      scroll-behavior: smooth;
+      background: var(--bg);
+    }
 
-		/* --- SECTION STYLING --- */
-		section { margin-bottom: 100px; }
-		.section-title {
-			font-family: var(--sans);
-			font-size: 0.75rem;
-			text-transform: uppercase;
-			letter-spacing: 3px;
-			color: var(--text-muted);
-			border-bottom: 1px solid var(--border);
-			padding-bottom: 14px;
-			margin-bottom: 45px;
-			display: flex;
-			justify-content: space-between;
-		}
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--serif);
+      line-height: 1.65;
+      background:
+        linear-gradient(180deg, rgba(111, 52, 56, 0.58) 0, rgba(111, 52, 56, 0.2) 18px, transparent 18px),
+        radial-gradient(circle at 18% 0%, rgba(216, 179, 106, 0.08), transparent 34rem),
+        linear-gradient(180deg, #151a1e 0%, #101416 42%, #0c1012 100%);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
 
-		/* --- FEATURED REVIEWS (Hero Layout) --- */
-		.lead-feature-grid {
-			display: grid;
-			grid-template-columns: 1.14fr 1fr;
-			gap: 60px;
-			align-items: flex-start;
-		}
-		@media (max-width: 960px) { .lead-feature-grid { grid-template-columns: 1fr; gap: 40px; } }
-		
-		.lead-poster {
-			border: 1px solid var(--border);
-			border-radius: 8px;
-			box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
-			overflow: hidden;
-			background: #000;
-			transition: border-color 0.4s ease, box-shadow 0.4s ease;
-		}
-		.lead-poster:hover { 
-			border-color: rgba(255, 255, 255, 0.15); 
-			box-shadow: 0 30px 60px rgba(223, 186, 115, 0.1);
-		}
-		.lead-poster img { 
-			width: 100%; 
-			height: auto; 
-			display: block;
-			opacity: 0.88;
-			transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
-		}
-		.lead-poster:hover img { transform: scale(1.015); opacity: 1; }
-		
-		.lead-title { font-size: 3.4rem; margin: 0 0 12px 0; font-weight: normal; line-height: 1.1; color: var(--text); }
-		.lead-meta { font-family: var(--sans); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 25px; }
-		.lead-text { font-size: 1.2rem; color: #ced7de; text-align: justify; margin-bottom: 35px; }
-		
-		/* Velvet Rating Pill */
-		.rating-display {
-			font-family: var(--sans);
-			font-size: 0.8rem;
-			letter-spacing: 2px;
-			text-transform: uppercase;
-			display: inline-flex;
-			align-items: center;
-			gap: 8px;
-			border: 1px solid rgba(223, 186, 115, 0.2);
-			padding: 8px 18px;
-			background: linear-gradient(135deg, rgba(22,27,31,0.8) 0%, rgba(14,17,19,0.8) 100%);
-			border-radius: 4px;
-			color: var(--gold);
-		}
-		.rating-display strong { color: var(--text); font-size: 0.95rem; }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
-		/* --- RECENT DISPATCHES GRID --- */
-		.secondary-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-			gap: 50px;
-		}
-		.secondary-card { 
-			background: var(--panel); 
-			border: 1px solid var(--border);
-			border-radius: 8px;
-			padding: 24px;
-			transition: background 0.3s, border-color 0.3s, transform 0.3s;
-		}
-		.secondary-card:hover {
-			background: var(--panel-hover);
-			border-color: var(--border-hover);
-			transform: translateY(-4px);
-		}
-		.secondary-poster { 
-			border-radius: 4px;
-			overflow: hidden; 
-			background: #000;
-			margin-bottom: 24px;
-			box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-		}
-		.secondary-poster img { 
-			width: 100%; 
-			height: 440px; 
-			object-fit: cover; 
-			opacity: 0.85;
-			transition: opacity 0.3s, transform 0.4s;
-		}
-		.secondary-card:hover .secondary-poster img { opacity: 1; transform: scale(1.02); }
-		.secondary-title { font-size: 1.9rem; margin: 0 0 8px 0; font-weight: normal; color: var(--text); }
-		.secondary-text { font-size: 1.05rem; color: #b8c4cf; text-align: justify; }
+    img {
+      max-width: 100%;
+      display: block;
+    }
 
-		/* --- FILTERABLE LOG ARCHIVE --- */
-		.archive-wrapper { 
-			background: var(--panel); 
-			border: 1px solid var(--border); 
-			padding: 40px; 
-			border-radius: 8px; 
-			box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-		}
-		.archive-controls { margin-bottom: 40px; }
-		#searchBar {
-			width: 100%;
-			box-sizing: border-box;
-			padding: 18px 24px;
-			background: rgba(14, 17, 19, 0.6);
-			border: 1px solid var(--border);
-			color: var(--text);
-			font-family: var(--sans);
-			font-size: 0.85rem;
-			letter-spacing: 1.5px;
-			border-radius: 6px;
-			outline: none;
-			transition: border-color 0.3s, background 0.3s;
-		}
-		#searchBar:focus { border-color: rgba(223, 186, 115, 0.4); background: rgba(14, 17, 19, 0.9); }
-		
-		.archive-table { display: flex; flex-direction: column; }
-		.archive-header {
-			display: grid;
-			grid-template-columns: 2fr 1.5fr 1fr 1fr;
-			font-family: var(--sans);
-			font-size: 0.7rem;
-			text-transform: uppercase;
-			letter-spacing: 2px;
-			color: var(--text-muted);
-			padding: 14px 20px;
-			border-bottom: 1px solid rgba(255,255,255,0.1);
-		}
-		.archive-row {
-			display: grid;
-			grid-template-columns: 2fr 1.5fr 1fr 1fr;
-			align-items: center;
-			padding: 22px 20px;
-			border-bottom: 1px solid var(--border);
-			font-size: 1.05rem;
-			transition: background 0.2s, transform 0.2s;
-		}
-		.archive-row:hover { 
-			background: rgba(255, 255, 255, 0.02); 
-			transform: translateX(4px);
-		}
-		.archive-title { font-weight: normal; font-family: var(--serif); font-size: 1.3rem; color: var(--text); }
-		.archive-director { font-family: var(--sans); font-size: 0.85rem; color: #a2b0bc; }
-		.archive-year { font-family: var(--sans); font-size: 0.85rem; color: var(--text-muted); }
-		.archive-rating { font-family: var(--sans); font-size: 0.85rem; color: var(--gold); font-weight: 600; }
-		
-		.no-results { display: none; text-align: center; padding: 40px; color: var(--text-muted); font-family: var(--sans); font-size: 0.85rem;}
-		.empty-notice { text-align: center; padding: 60px 20px; color: var(--text-muted); font-style: italic; border: 1px dashed var(--border); border-radius: 8px;}
+    .site-shell {
+      width: min(1550px, calc(100% - 48px));
+      margin: 0 auto;
+    }
 
-		/* --- EDITORIAL FOOTER CREDIT --- */
-		footer {
-			border-top: 1px solid var(--border);
-			padding-top: 30px;
-			margin-top: 40px;
-			text-align: center;
-			font-family: var(--sans);
-			font-size: 0.75rem;
-			text-transform: uppercase;
-			letter-spacing: 2px;
-			color: var(--text-muted);
-		}
-	</style>
+    .topbar {
+      position: sticky;
+      top: 18px;
+      z-index: 20;
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      background: rgba(13, 18, 20, 0.84);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+    }
+
+    .topbar-inner {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      padding: 0 30px;
+    }
+
+    .brand {
+      font-family: var(--sans);
+      font-size: 0.92rem;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 18px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 0.76rem;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .nav-links a {
+      transition: color 180ms ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--ink);
+    }
+
+    .nav-dot {
+      color: rgba(216, 179, 106, 0.72);
+      letter-spacing: 0;
+    }
+
+    .hero {
+      min-height: 420px;
+      display: grid;
+      align-items: end;
+      padding: 92px 0 74px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .kicker {
+      margin: 0 0 18px;
+      color: var(--gold);
+      font-family: var(--sans);
+      font-size: 0.74rem;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 1050px;
+      margin: 0;
+      font-size: clamp(3.8rem, 10vw, 9.6rem);
+      line-height: 0.9;
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+
+    .tagline {
+      max-width: 760px;
+      margin: 28px 0 0;
+      color: var(--soft);
+      font-family: var(--sans);
+      font-size: clamp(1rem, 1.5vw, 1.18rem);
+      line-height: 1.75;
+    }
+
+    section {
+      padding: 74px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 34px;
+      font-family: var(--sans);
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    .section-heading::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: var(--line);
+    }
+
+    .lead-grid {
+      display: grid;
+      grid-template-columns: minmax(300px, 0.92fr) minmax(360px, 1.08fr);
+      gap: clamp(34px, 5vw, 78px);
+      align-items: center;
+    }
+
+    .poster-frame {
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      background: #080a0b;
+      box-shadow: var(--shadow);
+    }
+
+    .poster-frame img {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      opacity: 0.92;
+      transition: transform 500ms ease, opacity 300ms ease;
+    }
+
+    .poster-frame:hover img {
+      transform: scale(1.025);
+      opacity: 1;
+    }
+
+    .poster-placeholder {
+      min-height: 560px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-family: var(--sans);
+      background:
+        linear-gradient(135deg, rgba(216, 179, 106, 0.08), transparent),
+        #080a0b;
+    }
+
+    .lead-title {
+      margin: 0;
+      font-size: clamp(2.5rem, 5vw, 5.2rem);
+      line-height: 0.98;
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+
+    .meta {
+      margin: 18px 0 28px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .lead-copy {
+      max-width: 720px;
+      color: #d7ddd9;
+      font-size: 1.13rem;
+    }
+
+    .lead-copy :global(p:first-child) {
+      margin-top: 0;
+    }
+
+    .rating {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 26px;
+      padding: 12px 16px;
+      border: 1px solid rgba(216, 179, 106, 0.35);
+      background: rgba(216, 179, 106, 0.07);
+      color: var(--gold);
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .rating strong {
+      color: var(--ink);
+      letter-spacing: 0.08em;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 26px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: rgba(21, 27, 31, 0.74);
+      transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: var(--line-strong);
+      background: rgba(29, 36, 41, 0.9);
+    }
+
+    .card-image {
+      background: #080a0b;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .card-image img {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      object-fit: cover;
+      opacity: 0.9;
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: clamp(1.55rem, 2vw, 2rem);
+      line-height: 1.08;
+      font-weight: 400;
+    }
+
+    .card p {
+      margin: 18px 0 0;
+      color: var(--soft);
+      font-size: 1rem;
+    }
+
+    .archive-panel {
+      border: 1px solid var(--line);
+      background: rgba(21, 27, 31, 0.72);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    .archive-tools {
+      padding: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    #searchBar {
+      width: 100%;
+      min-height: 54px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      padding: 0 18px;
+      color: var(--ink);
+      background: rgba(9, 12, 14, 0.72);
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    #searchBar:focus {
+      border-color: rgba(216, 179, 106, 0.62);
+    }
+
+    .archive-header,
+    .archive-row {
+      display: grid;
+      grid-template-columns: 2fr 1.35fr 0.7fr 0.7fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .archive-header {
+      padding: 16px 24px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 0.7rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .archive-row {
+      padding: 19px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.065);
+      transition: background 180ms ease;
+    }
+
+    .archive-row:hover {
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .archive-row:last-child {
+      border-bottom: 0;
+    }
+
+    .archive-title {
+      font-size: 1.22rem;
+    }
+
+    .archive-director,
+    .archive-year {
+      color: var(--soft);
+      font-family: var(--sans);
+      font-size: 0.88rem;
+    }
+
+    .archive-rating {
+      color: var(--gold);
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .empty,
+    .no-results {
+      padding: 42px 24px;
+      color: var(--muted);
+      text-align: center;
+      font-family: var(--sans);
+    }
+
+    .no-results {
+      display: none;
+    }
+
+    footer {
+      padding: 38px 0 52px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 0.74rem;
+      letter-spacing: 0.22em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 900px) {
+      .site-shell {
+        width: min(100% - 28px, 1550px);
+      }
+
+      .topbar {
+        top: 10px;
+        margin-top: 10px;
+      }
+
+      .topbar-inner {
+        min-height: auto;
+        padding: 18px;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        white-space: normal;
+        letter-spacing: 0.18em;
+        line-height: 1.5;
+      }
+
+      .hero {
+        min-height: 360px;
+        padding: 64px 0 54px;
+      }
+
+      .lead-grid,
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .poster-placeholder {
+        min-height: 380px;
+      }
+
+      .archive-header {
+        display: none;
+      }
+
+      .archive-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .archive-director::before {
+        content: "Director: ";
+        color: var(--muted);
+      }
+
+      .archive-year::before {
+        content: "Year: ";
+        color: var(--muted);
+      }
+
+      .archive-rating::before {
+        content: "Score: ";
+        color: var(--muted);
+      }
+    }
+  </style>
 </head>
+
 <body>
+  <div class="site-shell">
+    <nav class="topbar" aria-label="Primary navigation">
+      <div class="topbar-inner">
+        <a class="brand" href="#">Mise-en-Scène</a>
 
-	<nav class="sticky-nav">
-		<div style="font-weight: 600; color: #fff; letter-spacing: 2px;">Mise-en-Scène</div>
-		<div>
-			<a href="#featured">Featured Review</a> • 
-			<a href="#recent">Recent Additions</a> • 
-			<a href="#archive">The Archive</a>
-		</div>
-	</nav>
+        <div class="nav-links">
+          <a href="#featured">Featured Review</a>
+          <span class="nav-dot">•</span>
+          <a href="#recent">Recent Additions</a>
+          <span class="nav-dot">•</span>
+          <a href="#archive">The Archive</a>
+        </div>
+      </div>
+    </nav>
 
-	<header>
-		<h1>Mise-en-Scène</h1>
-		<div class="tagline">Essays and Criticisms on Modern Cinema</div>
-	</header>
+    <header class="hero">
+      <div>
+        <p class="kicker">Film criticism and visual essays</p>
+        <h1>Mise-en-Scène</h1>
+        <p class="tagline">
+          A curated journal for modern cinema, built around atmosphere, authorship,
+          performance, and the images that refuse to leave the mind.
+        </p>
+      </div>
+    </header>
 
-	<section id="featured">
-		<div class="section-title">
-			<span>Featured Analysis</span>
-		</div>
-		{leadFeature ? (
-			<div class="lead-feature-grid">
-				<div class="lead-poster">
-					{leadFeature.frontmatter.poster ? (
-						<img src={leadFeature.frontmatter.poster} alt={`Cinematic poster for ${leadFeature.frontmatter.title}`} />
-					) : (
-						<div style="height: 550px; background: #000; display:flex; align-items:center; justify-content:center; color:var(--text-muted);">No Poster Available</div>
-					)}
-				</div>
-				<div class="lead-essay-preview">
-					<h2 class="lead-title">{leadFeature.frontmatter.title}</h2>
-					<div class="lead-meta">
-						Year of Production: {leadFeature.frontmatter.year} &nbsp;•&nbsp; Directed by {leadFeature.frontmatter.director}
-					</div>
-					<div class="lead-text"><leadFeature.Content /></div>
-					<div class="rating-display">
-						Review Score: <strong>{leadFeature.frontmatter.rating} / 4.0</strong>
-					</div>
-				</div>
-			</div>
-		) : (
-			<div class="empty-notice">The editorial catalog is currently empty. New dispatches will populate automatically.</div>
-		)}
-	</section>
+    <main>
+      <section id="featured">
+        <div class="section-heading">
+          <span>Featured Analysis</span>
+        </div>
 
-	<section id="recent">
-		<div class="section-title">
-			<span>Recent Additions</span>
-		</div>
-		{secondaryFeatures.length > 0 ? (
-			<div class="secondary-grid">
-				{secondaryFeatures.map(post => (
-					<div class="secondary-card">
-						<div class="secondary-poster">
-							{post.frontmatter.poster ? (
-								<img src={post.frontmatter.poster} alt={`Cinematic poster for ${post.frontmatter.title}`} />
-							) : (
-								<div style="height: 440px; background: #000; display:flex; align-items:center; justify-content:center; color:var(--text-muted);">No Poster</div>
-							)}
-						</div>
-						<h3 class="secondary-title">{post.frontmatter.title} ({post.frontmatter.year})</h3>
-						<div class="lead-meta" style="margin-bottom:16px;">Dir. {post.frontmatter.director} &nbsp;//&nbsp; Score: {post.frontmatter.rating}/4.0</div>
-						<div class="secondary-text"><post.Content /></div>
-					</div>
-				))}
-			</div>
-		) : (
-			<div class="empty-notice">No recent auxiliary essays cataloged.</div>
-		)}
-	</section>
+        {leadFeature ? (
+          <div class="lead-grid">
+            <div class="poster-frame">
+              {leadFeature.poster ? (
+                <img src={leadFeature.poster} alt={`Poster for ${leadFeature.title}`} loading="eager" />
+              ) : (
+                <div class="poster-placeholder">No Poster Available</div>
+              )}
+            </div>
 
-	<section id="archive">
-		<div class="section-title">
-			<span>The Archive</span>
-		</div>
-		
-		<div class="archive-wrapper">
-			<div class="archive-controls">
-				<input type="text" id="searchBar" placeholder="Search the archive by title, auteur, or release year..." />
-			</div>
+            <article>
+              <h2 class="lead-title">{leadFeature.title}</h2>
+              <div class="meta">
+                {leadFeature.year} / Directed by {leadFeature.director}
+              </div>
 
-			<div class="archive-table">
-				<div class="archive-header">
-					<div>Film Title</div>
-					<div>Director</div>
-					<div>Year</div>
-					<div>Score</div>
-				</div>
+              <div class="lead-copy">
+                {LeadContent ? <LeadContent /> : <p>{leadFeature.description}</p>}
+              </div>
 
-				<div id="archiveCatalog">
-					{archivalCatalog.map(post => (
-						<div class="archive-row" data-title={post.frontmatter.title} data-director={post.frontmatter.director} data-year={post.frontmatter.year}>
-							<div class="archive-title">{post.frontmatter.title}</div>
-							<div class="archive-director">{post.frontmatter.director}</div>
-							<div class="archive-year">{post.frontmatter.year}</div>
-							<div class="archive-rating">{post.frontmatter.rating} / 4.0</div>
-						</div>
-					))}
-				</div>
-			</div>
-			
-			<div class="no-results" id="noResults">No entries match your filtering parameters.</div>
-		</div>
-	</section>
+              <div class="rating">
+                Review Score <strong>{leadFeature.rating} / 4.0</strong>
+              </div>
+            </article>
+          </div>
+        ) : (
+          <div class="empty">
+            The editorial catalog is currently empty. Add markdown reviews to begin.
+          </div>
+        )}
+      </section>
 
-	<footer>
-		Edited and Published by Cayden Mcguire Surrency // © 2026 Mise-en-Scène
-	</footer>
+      <section id="recent">
+        <div class="section-heading">
+          <span>Recent Additions</span>
+        </div>
 
-	<script>
-		const searchBar = document.getElementById('searchBar');
-		const archiveCatalog = document.getElementById('archiveCatalog');
-		const noResults = document.getElementById('noResults');
+        {secondaryFeatures.length > 0 ? (
+          <div class="cards">
+            {secondaryFeatures.map((post) => (
+              <article class="card">
+                <div class="card-image">
+                  {post.poster ? (
+                    <img src={post.poster} alt={`Poster for ${post.title}`} loading="lazy" />
+                  ) : (
+                    <div class="poster-placeholder">No Poster</div>
+                  )}
+                </div>
 
-		if (searchBar && archiveCatalog) {
-			const rows = archiveCatalog.getElementsByClassName('archive-row');
-			
-			searchBar.addEventListener('keyup', (e) => {
-				const target = e.target as HTMLInputElement;
-				const query = target.value.toLowerCase();
-				let matches = 0;
+                <div class="card-body">
+                  <h3>{post.title}</h3>
+                  <div class="meta">
+                    {post.year} / {post.director} / {post.rating} out of 4
+                  </div>
+                  <p>{post.description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div class="empty">No recent auxiliary essays cataloged.</div>
+        )}
+      </section>
 
-				Array.from(rows).forEach(row => {
-					const element = row as HTMLElement;
-					const title = element.getAttribute('data-title')?.toLowerCase() || '';
-					const director = element.getAttribute('data-director')?.toLowerCase() || '';
-					const year = element.getAttribute('data-year')?.toLowerCase() || '';
+      <section id="archive">
+        <div class="section-heading">
+          <span>The Archive</span>
+        </div>
 
-					if (title.includes(query) || director.includes(query) || year.includes(query)) {
-						element.style.display = 'grid';
-						matches++;
-					} else {
-						element.style.display = 'none';
-					}
-				});
+        <div class="archive-panel">
+          <div class="archive-tools">
+            <input
+              type="search"
+              id="searchBar"
+              placeholder="Search by film, director, or year"
+              aria-label="Search archive"
+            />
+          </div>
 
-				if (noResults) {
-					noResults.style.display = (matches === 0 && query !== '') ? 'block' : 'none';
-				}
-			});
-		}
-	</script>
+          <div class="archive-header">
+            <div>Film Title</div>
+            <div>Director</div>
+            <div>Year</div>
+            <div>Score</div>
+          </div>
+
+          <div id="archiveCatalog">
+            {archivalCatalog.map((post) => (
+              <div
+                class="archive-row"
+                data-title={post.title}
+                data-director={post.director}
+                data-year={post.year}
+              >
+                <div class="archive-title">{post.title}</div>
+                <div class="archive-director">{post.director}</div>
+                <div class="archive-year">{post.year}</div>
+                <div class="archive-rating">{post.rating} / 4.0</div>
+              </div>
+            ))}
+          </div>
+
+          <div class="no-results" id="noResults">
+            No entries match your search.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Edited and published by Cayden Mcguire Surrency / © 2026 Mise-en-Scène
+    </footer>
+  </div>
+
+  <script>
+    const searchBar = document.getElementById('searchBar');
+    const archiveCatalog = document.getElementById('archiveCatalog');
+    const noResults = document.getElementById('noResults');
+
+    if (searchBar && archiveCatalog && noResults) {
+      const rows = Array.from(archiveCatalog.querySelectorAll('.archive-row'));
+
+      searchBar.addEventListener('input', () => {
+        const query = searchBar.value.toLowerCase().trim();
+        let matches = 0;
+
+        rows.forEach((row) => {
+          const title = row.getAttribute('data-title')?.toLowerCase() || '';
+          const director = row.getAttribute('data-director')?.toLowerCase() || '';
+          const year = row.getAttribute('data-year')?.toLowerCase() || '';
+
+          const visible =
+            title.includes(query) ||
+            director.includes(query) ||
+            year.includes(query);
+
+          row.style.display = visible ? 'grid' : 'none';
+
+          if (visible) {
+            matches += 1;
+          }
+        });
+
+        noResults.style.display = matches === 0 && query !== '' ? 'block' : 'none';
+      });
+    }
+  </script>
 </body>
 </html>

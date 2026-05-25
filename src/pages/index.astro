@@ -195,4 +195,185 @@ const archivalCatalog = sortedPosts;
 		}
 		.secondary-card:hover .secondary-poster img { opacity: 1; transform: scale(1.01); }
 		.secondary-title { font-size: 1.8rem; margin: 0 0 5px 0; font-weight: normal; }
-		.secondary-text { font-size: 1rem; color: #bc
+		.secondary-text { font-size: 1rem; color: #bcbcbc; text-align: justify; }
+
+		/* --- SECTION IV: SEARCHABLE CRITICAL INDEX MATRIX --- */
+		.matrix-wrapper { background: var(--panel); border: 1px solid var(--border); padding: 30px; border-radius: 4px; }
+		.archive-controls { margin-bottom: 35px; }
+		#searchBar {
+			width: 100%;
+			box-sizing: border-box;
+			padding: 16px 20px;
+			background: var(--bg);
+			border: 1px solid var(--border);
+			color: var(--text);
+			font-family: var(--sans);
+			font-size: 0.85rem;
+			text-transform: uppercase;
+			letter-spacing: 2px;
+			outline: none;
+			transition: border-color 0.3s;
+		}
+		#searchBar:focus { border-color: #444; }
+		
+		.matrix-table { display: flex; flex-direction: column; }
+		.matrix-header {
+			display: grid;
+			grid-template-columns: 2fr 1.5fr 1fr 1fr;
+			font-family: var(--sans);
+			font-size: 0.7rem;
+			text-transform: uppercase;
+			letter-spacing: 2px;
+			color: var(--text-muted);
+			padding: 12px 15px;
+			border-bottom: 1px solid #333;
+		}
+		.matrix-row {
+			display: grid;
+			grid-template-columns: 2fr 1.5fr 1fr 1fr;
+			align-items: center;
+			padding: 18px 15px;
+			border-bottom: 1px solid var(--border);
+			font-size: 1rem;
+			transition: background 0.2s;
+		}
+		.matrix-row:hover { background: rgba(255,255,255,0.02); }
+		.matrix-title { font-weight: normal; font-family: var(--serif); font-size: 1.2rem; color: var(--accent); }
+		.matrix-director { font-family: var(--sans); font-size: 0.8rem; color: #999; }
+		.matrix-year { font-family: var(--sans); font-size: 0.8rem; color: var(--text-muted); }
+		.matrix-rating { font-family: var(--sans); font-size: 0.8rem; color: var(--gold); font-weight: 600; }
+		
+		.no-results { display: none; text-align: center; padding: 40px; color: var(--text-muted); font-family: var(--sans); font-size: 0.85rem; letter-spacing: 1px;}
+	</style>
+</head>
+<body>
+
+	<nav class="sticky-nav">
+		<div>Mise-en-Scène // Vol. I</div>
+		<div>
+			<a href="#primary-focus">Current Feature</a> • 
+			<a href="#supplementary">Dispatches</a> • 
+			<a href="#archive-matrix">Index Matrix</a>
+		</div>
+	</nav>
+
+	<header>
+		<h1>Mise-en-Scène</h1>
+		<div class="tagline">The International Journal of Cinematic Analytics & Architectural Critique</div>
+	</header>
+
+	{leadFeature && (
+		<section id="primary-focus">
+			<div class="section-title">
+				<span>Section I // Primary Critical Focus</span>
+				<span>[Cover Essay]</span>
+			</div>
+			<div class="lead-feature-grid">
+				<div class="lead-poster">
+					<img src={leadFeature.frontmatter.poster} alt="Featured narrative work asset" />
+				</div>
+				<div class="lead-essay-preview">
+					<span class="editorial-badge">Featured Analysis</span>
+					<h2 class="lead-title">{leadFeature.frontmatter.title}</h2>
+					<div class="lead-meta">
+						Year of Production: {leadFeature.frontmatter.year} &nbsp;•&nbsp; Direction: {leadFeature.frontmatter.director}
+					</div>
+					<div class="lead-text"><leadFeature.Content /></div>
+					<div class="evaluation-metric">
+						Evaluation Matrix Score: <strong>{leadFeature.frontmatter.rating} / 4.0</strong>
+					</div>
+				</div>
+			</div>
+		</section>
+	)}
+
+	<section>
+		<div class="manifesto-box">
+			<p class="manifesto-text">
+				"Cinema is not a reflection of reality, but an architecture of framing. We do not evaluate entertainment value; we dismantle the geometry of the image, the text within the subtext, and the rhythm of the cut."
+			</p>
+		</div>
+	</section>
+
+	<section id="supplementary">
+		<div class="section-title">
+			<span>Section II // Supplementary Technical Analyses</span>
+			<span>[Recent Dispatches]</span>
+		</div>
+		<div class="secondary-grid">
+			{secondaryFeatures.map(post => (
+				<div class="secondary-card">
+					<div class="secondary-poster">
+						<img src={post.frontmatter.poster} alt="Analytical documentation frame" />
+					</div>
+					<h3 class="secondary-title">{post.frontmatter.title} ({post.frontmatter.year})</h3>
+					<div class="lead-meta" style="margin-bottom:12px;">Dir. {post.frontmatter.director} &nbsp;//&nbsp; Evaluation: {post.frontmatter.rating}/4.0</div>
+					<div class="secondary-text"><post.Content /></div>
+				</div>
+			))}
+		</div>
+	</section>
+
+	<section id="archive-matrix">
+		<div class="section-title">
+			<span>Section III // Complete Archive Matrix</span>
+			<span>[Catalog Search]</span>
+		</div>
+		
+		<div class="matrix-wrapper">
+			<div class="archive-controls">
+				<input type="text" id="searchBar" placeholder="Query Matrix Index Parameters (Title, Director, Year)..." />
+			</div>
+
+			<div class="matrix-table">
+				<div class="matrix-header">
+					<div>Composition Composition</div>
+					<div>Director / Auteur</div>
+					<div>Year</div>
+					<div>Evaluation Index</div>
+				</div>
+
+				<div id="matrixCatalog">
+					{archivalCatalog.map(post => (
+						<div class="matrix-row" data-title={post.frontmatter.title} data-director={post.frontmatter.director} data-year={post.frontmatter.year}>
+							<div class="matrix-title">{post.frontmatter.title}</div>
+							<div class="matrix-director">{post.frontmatter.director}</div>
+							<div class="matrix-year">{post.frontmatter.year}</div>
+							<div class="matrix-rating">{post.frontmatter.rating} / 4.0</div>
+						</div>
+					))}
+				</div>
+			</div>
+			
+			<div class="no-results" id="noResults">Zero archive rows matched specified evaluation criteria.</div>
+		</div>
+	</section>
+
+	<script>
+		const searchBar = document.getElementById('searchBar');
+		const matrixCatalog = document.getElementById('matrixCatalog');
+		const rows = matrixCatalog.getElementsByClassName('matrix-row');
+		const noResults = document.getElementById('noResults');
+
+		searchBar.addEventListener('keyup', (e) => {
+			const query = e.target.value.toLowerCase();
+			let matches = 0;
+
+			Array.from(rows).forEach(row => {
+				const title = row.getAttribute('data-title').toLowerCase();
+				const director = row.getAttribute('data-director').toLowerCase();
+				const year = row.getAttribute('data-year').toLowerCase();
+
+				if (title.includes(query) || director.includes(query) || year.includes(query)) {
+					row.style.display = 'grid';
+					matches++;
+				} else {
+					row.style.display = 'none';
+				}
+			});
+
+			noResults.style.display = (matches === 0 && query !== '') ? 'block' : 'none';
+		});
+	</script>
+</body>
+</html>
